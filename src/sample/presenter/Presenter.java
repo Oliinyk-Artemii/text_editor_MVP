@@ -17,7 +17,7 @@ public class Presenter implements IPresenter {
     private IView view;
     private File file;
 
-    public Presenter(IView view){
+    public Presenter(IView view) {
         this.view = view;
         bind();
     }
@@ -28,23 +28,37 @@ public class Presenter implements IPresenter {
     }
 
     @Override
-    public void openFile(){
-        file = view.getDataFile(IView.FileActions.OPEN_FILE);
-        text = storage.readFromFile(file.getAbsolutePath());
-        view.setText(text.getText());
+    public void openFile() {
+        if (view.showDialog(IView.FileActions.OPEN_FILE)) {
+            file = view.getDataFile(IView.FileActions.OPEN_FILE);
+            text = storage.readFromFile(file.getAbsolutePath());
+            view.setText(text.getText());
+        }
     }
 
-    public void saveFile(File file){
-        text.setText(view.getText());
-        file = view.getDataFile(IView.FileActions.SAVE_FILE);
-        storage.writeToFile(text, file.getAbsolutePath());
+    @Override
+    public void saveFile() {
+        if (view.showDialog(IView.FileActions.SAVE_FILE)) {
+            text.setText(view.getText());
+            file = view.getDataFile(IView.FileActions.SAVE_FILE);
+            storage.writeToFile(text, file.getAbsolutePath());
+        }
     }
 
-    public void copyText(String s){
+    @Override
+    public void exit() {
+        if (view.showDialog(IView.FileActions.NEW_FILE)) {
+            System.exit(0);
+        }
+    }
+
+    @Override
+    public void copyText(String s) {
         text.copyWord(new Word(s));
     }
 
-    public void pasteText(){
+    @Override
+    public void pasteText() {
         if(field.getSelectedText() != null && field.getSelectedText().length() > 0) {
             //TODO add replacing text
         }
@@ -57,15 +71,17 @@ public class Presenter implements IPresenter {
 
     @Override
     public void newFile() {
-        field.clear();
-        text = new Text(new String[]{""});
+        if (view.showDialog(IView.FileActions.NEW_FILE)) {
+            field.clear();
+            text = new Text(new String[]{""});
+        }
     }
 
-    public void updateModel(){
+    public void updateModel() {
         text.setText(field.getText().split("\n"));
     }
 
-    public void updateView(){
+    public void updateView() {
         field.setText(text.getText());
     }
 

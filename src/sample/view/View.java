@@ -12,6 +12,7 @@ import sample.presenter.IPresenter;
 import sample.presenter.Presenter;
 
 import java.io.File;
+import java.util.Optional;
 
 public class View extends Application implements IView {
     private Stage primaryStage;
@@ -53,6 +54,9 @@ public class View extends Application implements IView {
         pasteItem = new MenuItem("Insert");
 
         fileChooser = new FileChooser();
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("TXT files (*.txt)", "*.txt");
+        fileChooser.getExtensionFilters().add(extFilter);
+
 
         newItem.setOnAction(actionEvent -> {
             presenter.newFile();
@@ -65,41 +69,15 @@ public class View extends Application implements IView {
         // Add menuItems to the Menus
         fileMenu.getItems().addAll(newItem, openFileItem, saveFileItem, exitItem);
         editMenu.getItems().addAll(copyItem, pasteItem);
-        saveFileItem.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                FileChooser fileChooser = new FileChooser();
+        saveFileItem.setOnAction(actionEvent -> {
+            if (presenter != null) {
+                presenter.saveFile();
+            }
+        });
+        exitItem.setOnAction(actionEvent -> presenter.exit());
+        copyItem.setOnAction(actionEvent -> presenter.copyText(textField.getSelectedText()));
+        pasteItem.setOnAction(actionEvent -> presenter.pasteText());
 
-                //Set extension filter for text files
-                FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("TXT files (*.txt)", "*.txt");
-                fileChooser.getExtensionFilters().add(extFilter);
-
-                //Show save file dialog
-                File file = fileChooser.showSaveDialog(stage);
-
-                if (file != null) {
-                    presenter.saveFile(file);
-                }
-            }
-        });
-        exitItem.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                System.exit(0);
-            }
-        });
-        copyItem.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                presenter.copyText(textField.getSelectedText());
-            }
-        });
-        pasteItem.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                presenter.pasteText();
-            }
-        });
         // Add Menus to the MenuBar
         menuBar.getMenus().addAll(fileMenu, editMenu);
 
@@ -130,6 +108,28 @@ public class View extends Application implements IView {
             default -> {
                 return new File("");
             }
+        }
+    }
+    @Override
+    public boolean showDialog(FileActions action) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        String title, text = "Are you sure you want to quit without saving?";
+
+        switch (action) {
+            case OPEN_FILE -> title = "Opening";
+            case SAVE_FILE -> title = "Saving";
+            case NEW_FILE -> title = "Creating";
+            default -> title = "Exiting";
+        }
+        alert.setTitle(title);
+        alert.setHeaderText(text);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.get() == ButtonType.OK){
+            return true;
+        } else {
+            alert.close();
+            return false;
         }
     }
 

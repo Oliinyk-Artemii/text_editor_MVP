@@ -10,12 +10,15 @@ public interface IView {
 
     File getDataFile(FileActions action);
 
+    boolean showDialog(FileActions action);
+
     void setText(String text);
 
     String[] getText();
 
     public enum FileActions {
         SAVE_FILE,
-        OPEN_FILE
+        OPEN_FILE,
+        NEW_FILE
     }
 }
